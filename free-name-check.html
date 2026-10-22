@@ -1,0 +1,52 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Free trademark name check | ClashOwl</title><meta name="description" content="See if anyone has recently filed a U.S. trademark that looks or sounds like your brand name. Free, instant.">
+<link rel="icon" href="favicon.svg"><link rel="stylesheet" href="style.css">
+<style>
+.nc{max-width:640px;margin:0 auto}.nc form{display:grid;gap:10px;margin-top:18px}.nc input[type=text],.nc input[type=email]{padding:13px 14px;border:1px solid #cfd6e4;border-radius:10px;font-size:16px}
+.nc .btn{border:0;cursor:pointer;font-size:16px}.res{margin-top:26px}.row{display:grid;grid-template-columns:1.6fr 1fr 1fr;gap:10px;padding:12px 0;border-bottom:1px solid #e6e9f0;font-size:15px}
+.blur{filter:blur(6px);user-select:none;font-weight:700;letter-spacing:.04em}.muted{color:#667085;font-size:14px}.err{color:#b42318}.sr{position:absolute;left:-9999px}
+.box{background:#f6f8fc;border-radius:14px;padding:20px;margin-top:18px}
+</style></head><body>
+<header><div class="wrap"><a class="brand" href="index.html"><img src="logo.svg" alt="">ClashOwl</a></div></header>
+<main><section><div class="wrap nc">
+<h1>Free trademark name check</h1>
+<p>Type your brand or shop name. We'll check recent U.S. trademark applications for names that look or sound like yours.</p>
+<form id="f"><label class="sr" for="n">Brand name</label><input id="n" type="text" name="name" maxlength="60" placeholder="Your brand name" required>
+<label class="sr" for="e">Email</label><input id="e" type="email" name="email" placeholder="you@yourbrand.com" required>
+<input type="checkbox" name="botcheck" id="bc" class="sr" tabindex="-1" autocomplete="off">
+<button class="btn" type="submit" id="go">Check my name</button>
+<p class="muted" style="margin:0">We'll also send you our free weekly trademark tips. Unsubscribe anytime. <a href="privacy.html">Privacy</a></p></form>
+<div class="res" id="r" aria-live="polite"></div>
+</div></section></main>
+<script>
+const API = window.NC_API || "/api/check";
+const CHECKOUT = "https://buy.stripe.com/3cIbJ2gqK0am6SP3ECbo400";
+const CAPTURE = new URLSearchParams(location.search).get("capture") === "1" || window.NC_CAPTURE === true; // preview: off by default so tests don't create fake signups
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fake = n => Array.from({length: Math.min(Math.max(n,4),18)}, () => "ABCDEFGHKLMNOPRSTUVW"[Math.random()*20|0]).join("");
+const fmt = d => new Date(d + "T12:00:00").toLocaleDateString("en-US", {month:"short", day:"numeric", year:"numeric"});
+document.getElementById("f").addEventListener("submit", async ev => {
+  ev.preventDefault(); const r = document.getElementById("r"), b = document.getElementById("go");
+  const name = document.getElementById("n").value.trim(), email = document.getElementById("e").value.trim(), botcheck = document.getElementById("bc").checked;
+  b.disabled = true; b.textContent = "Checking..."; r.innerHTML = "";
+  if (CAPTURE && !botcheck) { const fd = new FormData(); fd.append("access_key", "023b980d-f013-456e-8eaf-0711bed7df93"); fd.append("subject", "New ClashOwl waitlist signup");
+    fd.append("from_name", "ClashOwl name check"); fd.append("email", email); fd.append("source", "name-check"); fd.append("brand", name);
+    fetch("https://api.web3forms.com/submit", {method: "POST", body: fd}).catch(() => {}); }
+  try {
+    const res = await fetch(API, {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({name, email, botcheck})});
+    const d = await res.json();
+    if (!res.ok) { r.innerHTML = '<p class="err">' + esc(d.error || "Something went wrong. Please try again.") + '</p>'; return; }
+    const since = d.since ? fmt(d.since) : "recently";
+    if (!d.count) {
+      r.innerHTML = '<div class="box"><h3>Looks clear for now</h3><p>We didn\'t find any U.S. trademark applications filed since ' + since + ' that look or sound like <b>' + esc(name) + '</b>.</p><p>New applications are filed every day, though. ClashOwl checks every new one against your name and emails you if something comes up.</p><p><a class="btn" href="' + CHECKOUT + '">Start your 7-day free trial to watch it daily</a></p><p class="muted">This is a quick check of recent applications, not a full clearance search or legal advice.</p></div>';
+      return; }
+    const rows = d.matches.map(m => '<div class="row"><div><span class="blur" aria-hidden="true">' + fake(m.length) + '</span><div class="muted">' + esc(m.why.join(", ") || "similar") + '</div></div><div>Filed ' + fmt(m.filing_date) + '<div class="muted">Class ' + esc(m.classes.join(", ") || "not listed") + '</div></div><div>' + esc(m.status) + '</div></div>').join("");
+    const more = d.count > d.matches.length ? '<p class="muted">Showing the closest ' + d.matches.length + ' of ' + d.count + '.</p>' : "";
+    r.innerHTML = '<h3>We found ' + d.count + ' possible match' + (d.count == 1 ? "" : "es") + ' for ' + esc(name) + '</h3><p class="muted">U.S. trademark applications filed since ' + since + ' that look or sound like your name.</p>' + rows + more +
+      '<div class="box"><p><a class="btn" href="' + CHECKOUT + '">Start your 7-day free trial to see the names and get daily alerts</a></p><p class="muted">$15/month after the trial. Cancel anytime. A possible match isn\'t always a problem, and this isn\'t legal advice.</p></div>';
+  } catch (e) { r.innerHTML = '<p class="err">Something went wrong. Please try again.</p>'; }
+  finally { b.disabled = false; b.textContent = "Check my name"; }
+});
+const q = new URLSearchParams(location.search);
+if (q.get("name")) { document.getElementById("n").value = q.get("name"); if (q.get("email")) { document.getElementById("e").value = q.get("email"); document.getElementById("f").requestSubmit(); } }
+</script></body></html>
