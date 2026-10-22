@@ -7,7 +7,7 @@
 .blur{filter:blur(6px);user-select:none;font-weight:700;letter-spacing:.04em}.muted{color:#667085;font-size:14px}.err{color:#b42318}.sr{position:absolute;left:-9999px}
 .box{background:#f6f8fc;border-radius:14px;padding:20px;margin-top:18px}
 </style></head><body>
-<header><div class="wrap"><a class="brand" href="index.html"><img src="logo.svg" alt="">ClashOwl</a></div></header>
+<header class="nav"><div class="wrap"><a class="brand" href="index.html"><img src="logo.svg" alt="">ClashOwl</a></div></header>
 <main><section><div class="wrap nc">
 <h1>Free trademark name check</h1>
 <p>Type your brand or shop name. We'll check recent U.S. trademark applications for names that look or sound like yours.</p>
@@ -19,9 +19,9 @@
 <div class="res" id="r" aria-live="polite"></div>
 </div></section></main>
 <script>
-const API = window.NC_API || "/api/check";
+const API = window.NC_API || "https://clashowl-namecheck.clashowl.workers.dev/api/check";
 const CHECKOUT = "https://buy.stripe.com/3cIbJ2gqK0am6SP3ECbo400";
-const CAPTURE = new URLSearchParams(location.search).get("capture") === "1" || window.NC_CAPTURE === true; // preview: off by default so tests don't create fake signups
+const CAPTURE = new URLSearchParams(location.search).get("capture") !== "0"; // on by default; add ?capture=0 when testing so no fake signups are created
 const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const fake = n => Array.from({length: Math.min(Math.max(n,4),18)}, () => "ABCDEFGHKLMNOPRSTUVW"[Math.random()*20|0]).join("");
 const fmt = d => new Date(d + "T12:00:00").toLocaleDateString("en-US", {month:"short", day:"numeric", year:"numeric"});
@@ -48,5 +48,5 @@ document.getElementById("f").addEventListener("submit", async ev => {
   finally { b.disabled = false; b.textContent = "Check my name"; }
 });
 const q = new URLSearchParams(location.search);
-if (q.get("name")) { document.getElementById("n").value = q.get("name"); if (q.get("email")) { document.getElementById("e").value = q.get("email"); document.getElementById("f").requestSubmit(); } }
+if (q.get("name")) { document.getElementById("n").value = q.get("name"); if (q.get("email") && !CAPTURE) { document.getElementById("e").value = q.get("email"); document.getElementById("f").requestSubmit(); } }
 </script></body></html>
