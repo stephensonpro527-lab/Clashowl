@@ -2,14 +2,14 @@
 // Markup: <form data-namecheck data-source="..." data-plans="#pricing"> with inputs name, email, botcheck, a submit button, and a [data-results] element after it.
 (function () {
   var API = window.NC_API || "https://clashowl-namecheck.clashowl.workers.dev/api/check";
-  var MONTHLY = "https://buy.stripe.com/3cIbJ2gqK0am6SP3ECbo400", YEARLY = "https://buy.stripe.com/3cIcN6b6qf5gb956QObo401";
+  var MONTHLY = "https://buy.stripe.com/3cIbJ2gqK0am6SP3ECbo400", YEARLY = "https://buy.stripe.com/3cIcN6b6qf5gb956QObo401", PORTFOLIO = "https://buy.stripe.com/00wbJ2a2maP07WT3ECbo402";
   var q = new URLSearchParams(location.search), CAPTURE = q.get("capture") !== "0"; // add ?capture=0 when testing so no signups are created
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
   function fake(n) { var s = ""; for (var i = 0; i < Math.min(Math.max(n, 4), 18); i++) s += "ABCDEFGHKLMNOPRSTUVW"[Math.random() * 20 | 0]; return s; }
   function fmt(d) { return new Date(d + "T12:00:00").toLocaleDateString("en-US", {month: "short", day: "numeric", year: "numeric"}); }
   function cta(label, plans) {
     return '<p style="margin:0 0 .5rem"><a class="btn" href="' + MONTHLY + '" data-goatcounter-click="nc-trial">' + label + '</a></p>' +
-      '<p class="muted" style="margin:0">$15/month after 7 free days, or <a href="' + YEARLY + '" data-goatcounter-click="nc-yearly">$149/year</a>. Cancel anytime. <a href="' + plans + '">See plans</a></p>';
+      '<p class="muted" style="margin:0">$15/month after 7 free days, <a href="' + YEARLY + '" data-goatcounter-click="nc-yearly">$149/year</a>, or <a href="' + PORTFOLIO + '" data-goatcounter-click="nc-portfolio">$49/month for up to 15 brands</a>. Cancel anytime. <a href="' + plans + '">See plans</a></p>';
   }
   function init(f) {
     var r = f.parentNode.querySelector("[data-results]"), b = f.querySelector("button"), src = f.getAttribute("data-source") || "name-check", plans = f.getAttribute("data-plans") || "index.html#pricing";

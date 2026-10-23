@@ -7,7 +7,7 @@ ClashOwl is for small sellers, including Etsy, Amazon and Shopify shops, who wan
 - What it does: sends a daily email alert about new US trademark filings similar to your brand
 - Who it's for: small brands and independent online sellers in the US
 - Data source: USPTO trademark data
-- Pricing: $15/mo or $149/yr
+- Pricing: $15/mo or $149/yr (up to 3 brands), or $49/mo Portfolio (up to 15 brands)
 - Website: https://clashowl.com
 
 ## Guides
