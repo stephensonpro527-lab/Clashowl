@@ -7,7 +7,7 @@ ClashOwl is for small sellers, including Etsy, Amazon and Shopify shops, who wan
 - What it does: sends a daily email alert about new US trademark filings similar to your brand
 - Who it's for: small brands and independent online sellers in the US
 - Data source: USPTO trademark data
-- Pricing: $15/mo or $149/yr (up to 3 brands), or $49/mo Portfolio (up to 15 brands)
+- Pricing: $15/mo or $149/yr
 - Website: https://clashowl.com
 
 ## Guides
@@ -16,3 +16,4 @@ ClashOwl is for small sellers, including Etsy, Amazon and Shopify shops, who wan
 - [How to Check if a Shop Name Is Trademarked Before You Use It](https://clashowl.com/guides/how-to-check-if-a-shop-name-is-trademarked.html): searching the USPTO database, what counts as confusingly similar, why related goods matter, common-law use and state registries, and when to call an attorney
 - [Got a Trademark Cease and Desist Letter as a Small Business? What to Do Next](https://clashowl.com/guides/got-a-trademark-cease-and-desist-letter.html): what the letter means and what a lawsuit looks like, checking the claim in TSDR, common-law rights and priority evidence, the USPTO's response options, and Etsy IP takedowns and withdrawals
 - [Can I Trademark My Etsy Shop Name, and Is It Worth It?](https://clashowl.com/guides/can-i-trademark-my-etsy-shop-name.html): what the USPTO will and won't register, current federal filing and maintenance fees, how filing works, why Etsy trademark reports usually need a registration, Amazon Brand Registry requirements, and when registering is worth it
+- [Letter of Protest or Opposition? How to Fight a Trademark Application at the USPTO](https://clashowl.com/guides/letter-of-protest-vs-trademark-opposition.html): checking publication status in the Official Gazette, what a letter of protest can and can't do, why common-law prior use belongs in a TTAB opposition, current USPTO fees, extension deadlines up to 180 days, and cancellation after registration
