@@ -29,15 +29,15 @@
         var since = d.since ? fmt(d.since) : "recently";
         if (!d.count) {
           r.innerHTML = '<div class="nc-box"><h3>Looks clear for now</h3><p>We didn\'t find any U.S. trademark applications filed since ' + since + ' that look or sound like <b>' + esc(name) + '</b>.</p><p>New ones are filed every day, though. ClashOwl checks each one against your name and emails you if something comes up.</p>' +
-            cta("Start your 7-day free trial to watch it daily", plans) + '<p class="muted">This is a quick check of recent applications, not a full clearance search or legal advice.</p></div>';
+            cta("Start your 7-day free trial to watch it daily", plans) + '<p class="muted">This free check covers U.S. applications filed since ' + since + ' (roughly the last 60 days). It is not a full USPTO register report, not a clearance search, and not legal advice.</p></div>';
           return;
         }
         var rows = d.matches.map(function (m) {
           return '<div class="nc-row"><div><span class="nc-blur" aria-hidden="true">' + fake(m.length) + '</span><span class="sr">Name hidden</span><div class="muted">' + esc(m.why.join(", ") || "similar") + '</div></div><div>Filed ' + fmt(m.filing_date) + '<div class="muted">Class ' + esc(m.classes.join(", ") || "not listed") + '</div></div><div>' + esc(m.status) + '</div></div>';
         }).join("");
         var more = d.count > d.matches.length ? '<p class="muted">Showing the closest ' + d.matches.length + ' of ' + d.count + '.</p>' : "";
-        r.innerHTML = '<h3>We found ' + d.count + ' possible match' + (d.count == 1 ? "" : "es") + ' for ' + esc(name) + '</h3><p class="muted">U.S. trademark applications filed since ' + since + ' that look or sound like your name.</p>' + rows + more +
-          '<div class="nc-box">' + cta("Start your 7-day free trial to see the names and get daily alerts", plans) + '<p class="muted">A possible match isn\'t always a problem, and this isn\'t legal advice.</p></div>';
+        r.innerHTML = '<h3>We found ' + d.count + ' possible match' + (d.count == 1 ? "" : "es") + ' for ' + esc(name) + '</h3><p class="muted">U.S. trademark applications filed since ' + since + ' (roughly the last 60 days, not the full register) that look or sound like your name.</p>' + rows + more +
+          '<div class="nc-box">' + cta("Start your 7-day free trial to see the names and get daily alerts", plans) + '<p class="muted">These matches are from filings since ' + since + ' (roughly the last 60 days), not the full USPTO register. A possible match isn\'t always a problem, and this isn\'t legal advice.</p></div>';
       } catch (e) { r.innerHTML = '<p class="nc-err">Something went wrong. Please try again.</p>'; }
       finally { b.disabled = false; b.textContent = label; }
     });
