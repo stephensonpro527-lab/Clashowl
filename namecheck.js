@@ -1,5 +1,6 @@
 // ClashOwl free name check. Used by the homepage hero and free-name-check.html.
-// Markup: <form data-namecheck data-source="..." data-plans="#pricing"> with inputs name, email, botcheck, a submit button, and a [data-results] element after it.
+// Markup: <form data-namecheck data-source="..." data-plans="#pricing"> with inputs name, email (starts hidden), botcheck, a submit button, and a [data-results] element after it.
+// Two steps: name only -> preview count (no email, no signup). Email -> full matches, USPTO links, trial CTA (signup captured here only).
 (function () {
   var API = window.NC_API || "https://clashowl-namecheck.clashowl.workers.dev/api/check";
   var MONTHLY = "https://buy.stripe.com/3cIbJ2gqK0am6SP3ECbo400", YEARLY = "https://buy.stripe.com/3cIcN6b6qf5gb956QObo401", PORTFOLIO = "https://buy.stripe.com/28E3cwa2m4qC1yv0sqbo403";
@@ -13,17 +14,43 @@
   }
   function init(f) {
     var r = f.parentNode.querySelector("[data-results]"), b = f.querySelector("button"), label = b.textContent, src = f.getAttribute("data-source") || "name-check", plans = f.getAttribute("data-plans") || "index.html#pricing";
+    var ef = f.elements.email, unlock = false, lastName = "";
+    function step1() { unlock = false; ef.hidden = true; ef.required = false; b.textContent = label; }
+    function step2() { unlock = true; ef.hidden = false; ef.required = true; b.textContent = "Show me the matches"; }
+    step1();
+    f.elements.name.addEventListener("input", function () { if (unlock && f.elements.name.value.trim() !== lastName) { step1(); r.innerHTML = ""; } });
+    function previewHTML(d, name) {
+      var fb = d.coverage === "60day_fallback", n = d.count || 0, so = (d.counts && d.counts.sound_only) || 0;
+      var pool = fb ? "in U.S. applications filed since " + fmt(d.since) : d.total ? "in " + Number(d.total).toLocaleString() + " live U.S. federal marks" : "in live U.S. federal marks";
+      var banner = fb ? '<div class="nc-box nc-warn"><p><b>Limited check right now.</b> Our full-register search is temporarily unavailable, so this result only covers U.S. applications filed since ' + fmt(d.since) + ' (about the last 60 days). Older applications and registered marks were not searched.</p></div>' : "";
+      var head = n ? n + ' similar filing' + (n == 1 ? "" : "s") + ' found for ' + esc(name) + (so ? ', plus ' + so + ' that sound' + (so == 1 ? "s" : "") + ' similar' : "")
+        : so ? 'No close look-alikes for ' + esc(name) + ', but ' + so + ' mark' + (so == 1 ? " sounds" : "s sound") + ' similar'
+        : 'No close matches for ' + esc(name);
+      var ask = (n || so) ? 'Enter your email to see each mark, its serial number, filing date, class, status and USPTO record link.'
+        : 'Enter your email to see the full result and get the option to watch new filings for this name.';
+      return banner + '<div class="nc-box"><h3>' + head + ' ' + pool + '</h3><p>' + ask + '</p><p class="muted">We\'ll also send you our weekly trademark tips. Unsubscribe anytime. <a href="privacy.html">Privacy</a></p><p class="muted">Automated screen only: not a clearance search and not legal advice. It does not cover state or common-law (unregistered) rights.</p></div>';
+    }
     f.addEventListener("submit", async function (ev) {
       ev.preventDefault();
-      var name = f.elements.name.value.trim(), email = f.elements.email.value.trim(), botcheck = f.elements.botcheck.checked;
-      b.disabled = true; b.textContent = "Checking..."; r.innerHTML = "";
+      var name = f.elements.name.value.trim(), email = unlock ? ef.value.trim() : "", botcheck = f.elements.botcheck.checked;
+      b.disabled = true; b.textContent = "Checking...";
+      if (!unlock) {
+        try {
+          var pr = await fetch(API, {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({name: name, botcheck: botcheck})});
+          var pd = await pr.json();
+          if (!pr.ok) { r.innerHTML = '<p class="nc-err">' + esc(pd.error || "Something went wrong. Please try again.") + '</p>'; b.disabled = false; b.textContent = label; return; }
+          lastName = name; r.innerHTML = previewHTML(pd, name); b.disabled = false; step2(); ef.focus();
+        } catch (e) { r.innerHTML = '<p class="nc-err">Something went wrong. Please try again.</p>'; b.disabled = false; b.textContent = label; }
+        return;
+      }
+      r.innerHTML = "";
       if (CAPTURE && !botcheck) {
         var fd = new FormData(); fd.append("access_key", "023b980d-f013-456e-8eaf-0711bed7df93"); fd.append("subject", "New ClashOwl waitlist signup");
         fd.append("from_name", "ClashOwl name check"); fd.append("email", email); fd.append("source", src); fd.append("brand", name);
         fetch("https://api.web3forms.com/submit", {method: "POST", body: fd}).catch(function () {});
       }
       try {
-        var res = await fetch(API, {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({name: name, email: email, botcheck: botcheck})});
+        var res = await fetch(API, {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({name: name, email: email, botcheck: botcheck, unlock: true})});
         var d = await res.json();
         if (!res.ok) { r.innerHTML = '<p class="nc-err">' + esc(d.error || "Something went wrong. Please try again.") + '</p>'; return; }
         var fb = d.coverage === "60day_fallback";
@@ -42,9 +69,9 @@
         r.innerHTML = banner + '<h3>We found ' + d.count + ' possible match' + (d.count == 1 ? "" : "es") + ' for ' + esc(name) + ' ' + pool + '</h3><p class="muted">' + (fb ? 'Recent applications only (60-day limited check).' : 'Live U.S. federal trademarks (pending or registered) that look or sound like your name. Dead and abandoned marks are left out.') + '</p>' + rows + more + sounds +
           '<div class="nc-box"><p>New filings keep coming. ClashOwl can watch them for your name and email you if something similar is filed.</p>' + uspto(name) + cta("Start your 7-day free trial to watch new filings daily", plans) + '<p class="muted">A possible match isn\'t always a problem. Automated screen only: not a clearance search and not legal advice. It does not cover state or common-law (unregistered) rights. Talk to a trademark attorney before you rely on a name.</p></div>';
       } catch (e) { r.innerHTML = '<p class="nc-err">Something went wrong. Please try again.</p>'; }
-      finally { b.disabled = false; b.textContent = label; }
+      finally { b.disabled = false; b.textContent = "Show me the matches"; }
     });
-    if (q.get("name") && q.get("email") && !CAPTURE) { f.elements.name.value = q.get("name"); f.elements.email.value = q.get("email"); f.requestSubmit(); }
+    if (q.get("name") && !CAPTURE) { f.elements.name.value = q.get("name"); if (q.get("email")) { lastName = q.get("name").trim(); step2(); ef.value = q.get("email"); } f.requestSubmit(); }
   }
   document.querySelectorAll("form[data-namecheck]").forEach(init);
 })();
