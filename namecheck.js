@@ -5,6 +5,7 @@
   var API = window.NC_API || "https://clashowl-namecheck.clashowl.workers.dev/api/check";
   var MONTHLY = "https://buy.stripe.com/3cIbJ2gqK0am6SP3ECbo400", YEARLY = "https://buy.stripe.com/3cIcN6b6qf5gb956QObo401", PORTFOLIO = "https://buy.stripe.com/28E3cwa2m4qC1yv0sqbo403";
   var q = new URLSearchParams(location.search), CAPTURE = q.get("capture") !== "0"; // add ?capture=0 when testing so no signups are created
+  function gc(n) { try { if (window.goatcounter && window.goatcounter.count) window.goatcounter.count({path: n, title: n, event: true}); } catch (e) {} }
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
   function uspto(n) { return '<p><a class="btn" href="https://tmsearch.uspto.gov/search/search-results?query=' + encodeURIComponent(n) + '" target="_blank" rel="noopener" data-goatcounter-click="nc-uspto-full">Search USPTO yourself</a></p>'; }
   function fmt(d) { if (!d) return "date not listed"; return new Date(d + "T12:00:00").toLocaleDateString("en-US", {month: "short", day: "numeric", year: "numeric"}); }
@@ -35,15 +36,17 @@
       var name = f.elements.name.value.trim(), email = unlock ? ef.value.trim() : "", botcheck = f.elements.botcheck.checked;
       b.disabled = true; b.textContent = "Checking...";
       if (!unlock) {
+        gc("nc-check-start");
         try {
           var pr = await fetch(API, {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({name: name, botcheck: botcheck})});
           var pd = await pr.json();
           if (!pr.ok) { r.innerHTML = '<p class="nc-err">' + esc(pd.error || "Something went wrong. Please try again.") + '</p>'; b.disabled = false; b.textContent = label; return; }
-          lastName = name; r.innerHTML = previewHTML(pd, name); b.disabled = false; step2(); ef.focus();
+          lastName = name; gc("nc-check-done"); r.innerHTML = previewHTML(pd, name); b.disabled = false; step2(); ef.focus();
         } catch (e) { r.innerHTML = '<p class="nc-err">Something went wrong. Please try again.</p>'; b.disabled = false; b.textContent = label; }
         return;
       }
       r.innerHTML = "";
+      gc("nc-email-capture");
       if (CAPTURE && !botcheck) {
         var fd = new FormData(); fd.append("access_key", "023b980d-f013-456e-8eaf-0711bed7df93"); fd.append("subject", "New ClashOwl waitlist signup");
         fd.append("from_name", "ClashOwl name check"); fd.append("email", email); fd.append("source", src); fd.append("brand", name);

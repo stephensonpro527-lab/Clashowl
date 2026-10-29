@@ -115,3 +115,7 @@ footer a{color:#b5bbd6;display:block;padding:4px 0;transition:color .15s}footer 
 .nc-box{background:#f6f8fc;color:#101828;border-radius:14px;padding:18px;margin-top:16px}.nc-warn{background:#fff7e6;border:1px solid #f5c26b}.nc-hero h2{font-size:1.15rem;margin:1.2rem 0 0}
 .nc-res .btn,.nc-form .btn{white-space:normal;text-align:center;max-width:100%;box-sizing:border-box}.nc-form,.nc-res,.nc-hero{min-width:0;max-width:100%}.nc-form input{min-width:0}.nc-row>div{min-width:0;overflow-wrap:anywhere}
 .nc-form input[hidden]{display:none}
+
+.plan{position:relative}.plan h3 .tag{position:static;display:inline-block;margin-left:8px;vertical-align:middle;font-size:.7rem}
+.cmp .yes,.cmp .no{font-weight:600}
+.visual.ex{margin-top:28px;max-width:560px}.ex-label{position:relative;z-index:1;margin:0 0 10px;font-size:.78rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#f5d78e}
