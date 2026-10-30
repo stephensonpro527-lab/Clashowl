@@ -119,3 +119,4 @@ footer a{color:#b5bbd6;display:block;padding:4px 0;transition:color .15s}footer 
 .plan{position:relative}.plan h3 .tag{position:static;display:inline-block;margin-left:8px;vertical-align:middle;font-size:.7rem}
 .cmp .yes,.cmp .no{font-weight:600}
 .visual.ex{margin-top:28px;max-width:560px}.ex-label{position:relative;z-index:1;margin:0 0 10px;font-size:.78rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#f5d78e}
+.visual::before{pointer-events:none}.hero .note{position:relative;z-index:1}.hero .note a{display:inline-block;padding:11px 0}
