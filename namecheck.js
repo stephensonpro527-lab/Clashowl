@@ -15,9 +15,9 @@
   }
   function init(f) {
     var r = f.parentNode.querySelector("[data-results]"), b = f.querySelector("button"), label = b.textContent, src = f.getAttribute("data-source") || "name-check", plans = f.getAttribute("data-plans") || "index.html#pricing";
-    var ef = f.elements.email, unlock = false, lastName = "";
+    var ef = f.elements.email, unlock = false, lastName = "", unlockLabel = "Show me the matches";
     function step1() { unlock = false; ef.hidden = true; ef.required = false; b.textContent = label; }
-    function step2() { unlock = true; ef.hidden = false; ef.required = true; b.textContent = "Show me the matches"; }
+    function step2() { unlock = true; ef.hidden = false; ef.required = true; b.textContent = unlockLabel; }
     step1();
     f.elements.name.addEventListener("input", function () { if (unlock && f.elements.name.value.trim() !== lastName) { step1(); r.innerHTML = ""; } });
     function previewHTML(d, name) {
@@ -41,7 +41,7 @@
           var pr = await fetch(API, {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({name: name, botcheck: botcheck})});
           var pd = await pr.json();
           if (!pr.ok) { r.innerHTML = '<p class="nc-err">' + esc(pd.error || "Something went wrong. Please try again.") + '</p>'; b.disabled = false; b.textContent = label; return; }
-          lastName = name; gc("nc-check-done"); r.innerHTML = previewHTML(pd, name); b.disabled = false; step2(); ef.focus();
+          lastName = name; gc("nc-check-done"); var tot = (pd.count || 0) + ((pd.counts && pd.counts.sound_only) || 0); unlockLabel = tot ? "Show me the " + tot + " match" + (tot == 1 ? "" : "es") : "Show me the full result"; r.innerHTML = previewHTML(pd, name); b.disabled = false; step2(); ef.focus();
         } catch (e) { r.innerHTML = '<p class="nc-err">Something went wrong. Please try again.</p>'; b.disabled = false; b.textContent = label; }
         return;
       }
@@ -72,7 +72,7 @@
         r.innerHTML = banner + '<h3>We found ' + d.count + ' possible match' + (d.count == 1 ? "" : "es") + ' for ' + esc(name) + ' ' + pool + '</h3><p class="muted">' + (fb ? 'Recent applications only (60-day limited check).' : 'Live U.S. federal trademarks (pending or registered) that look or sound like your name. Dead and abandoned marks are left out.') + '</p>' + rows + more + sounds +
           '<div class="nc-box"><p>New filings keep coming. ClashOwl can watch them for your name and email you if something similar is filed.</p>' + uspto(name) + cta("Start your 7-day free trial to watch new filings daily", plans) + '<p class="muted">A possible match isn\'t always a problem. Automated screen only: not a clearance search and not legal advice. It does not cover state or common-law (unregistered) rights. Talk to a trademark attorney before you rely on a name.</p></div>';
       } catch (e) { r.innerHTML = '<p class="nc-err">Something went wrong. Please try again.</p>'; }
-      finally { b.disabled = false; b.textContent = "Show me the matches"; }
+      finally { b.disabled = false; b.textContent = unlockLabel; }
     });
     if (q.get("name") && !CAPTURE) { f.elements.name.value = q.get("name"); if (q.get("email")) { lastName = q.get("name").trim(); step2(); ef.value = q.get("email"); } f.requestSubmit(); }
   }
