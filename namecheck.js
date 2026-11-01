@@ -15,7 +15,7 @@
   }
   function init(f) {
     var r = f.parentNode.querySelector("[data-results]"), b = f.querySelector("button"), label = b.textContent, src = f.getAttribute("data-source") || "name-check", plans = f.getAttribute("data-plans") || "index.html#pricing";
-    var ef = f.elements.email, unlock = false, lastName = "", unlockLabel = "Show me the matches";
+    var ef = f.elements.email, unlock = false, lastName = "", unlockLabel = "Show me the similar names";
     function step1() { unlock = false; ef.hidden = true; ef.required = false; b.textContent = label; }
     function step2() { unlock = true; ef.hidden = false; ef.required = true; b.textContent = unlockLabel; }
     step1();
@@ -41,7 +41,7 @@
           var pr = await fetch(API, {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({name: name, botcheck: botcheck})});
           var pd = await pr.json();
           if (!pr.ok) { r.innerHTML = '<p class="nc-err">' + esc(pd.error || "Something went wrong. Please try again.") + '</p>'; b.disabled = false; b.textContent = label; return; }
-          lastName = name; gc("nc-check-done"); var tot = (pd.count || 0) + ((pd.counts && pd.counts.sound_only) || 0); unlockLabel = tot ? "Show me the " + tot + " match" + (tot == 1 ? "" : "es") : "Show me the full result"; r.innerHTML = previewHTML(pd, name); b.disabled = false; step2(); ef.focus();
+          lastName = name; gc("nc-check-done"); var tot = (pd.count || 0) + ((pd.counts && pd.counts.sound_only) || 0); unlockLabel = tot ? "Show me the " + tot + " similar name" + (tot == 1 ? "" : "s") : "Show me the full result"; r.innerHTML = previewHTML(pd, name); b.disabled = false; step2(); ef.focus();
         } catch (e) { r.innerHTML = '<p class="nc-err">Something went wrong. Please try again.</p>'; b.disabled = false; b.textContent = label; }
         return;
       }
