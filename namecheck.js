@@ -6,6 +6,17 @@
   var MONTHLY = "https://buy.stripe.com/3cIbJ2gqK0am6SP3ECbo400", YEARLY = "https://buy.stripe.com/3cIcN6b6qf5gb956QObo401", PORTFOLIO = "https://buy.stripe.com/28E3cwa2m4qC1yv0sqbo403";
   var q = new URLSearchParams(location.search), CAPTURE = q.get("capture") !== "0"; // add ?capture=0 when testing so no signups are created
   function gc(n) { try { if (window.goatcounter && window.goatcounter.count) window.goatcounter.count({path: n, title: n, event: true}); } catch (e) {} }
+  function adsLead() {
+    try {
+      if (typeof gtag === "function") {
+        gtag("event", "conversion", {
+          send_to: "AW-18550832284/GoADCM-PpbAdEJz53I1F",
+          value: 1.0,
+          currency: "USD"
+        });
+      }
+    } catch (e) {}
+  }
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
   function uspto(n) { return '<p><a class="btn" href="https://tmsearch.uspto.gov/search/search-results?query=' + encodeURIComponent(n) + '" target="_blank" rel="noopener" data-goatcounter-click="nc-uspto-full">Search USPTO yourself</a></p>'; }
   function fmt(d) { if (!d) return "date not listed"; return new Date(d + "T12:00:00").toLocaleDateString("en-US", {month: "short", day: "numeric", year: "numeric"}); }
@@ -56,6 +67,7 @@
         var res = await fetch(API, {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({name: name, email: email, botcheck: botcheck, unlock: true})});
         var d = await res.json();
         if (!res.ok) { r.innerHTML = '<p class="nc-err">' + esc(d.error || "Something went wrong. Please try again.") + '</p>'; return; }
+        adsLead();
         var fb = d.coverage === "60day_fallback";
         var banner = fb ? '<div class="nc-box nc-warn"><p><b>Limited check right now.</b> Our full-register search is temporarily unavailable, so this result only covers U.S. applications filed since ' + fmt(d.since) + ' (about the last 60 days). Older applications and registered marks were not searched. Please try again later or use the USPTO search button.</p></div>' : "";
         var sounds = (d.sound_alikes || []).length ? '<p class="muted" style="margin-top:1rem">Also sounds similar: ' + d.sound_alikes.map(function (m) { return esc(m.mark) + (m.serial ? ' (<a href="https://tsdr.uspto.gov/#caseNumber=' + encodeURIComponent(m.serial) + '&caseType=SERIAL_NO&searchType=statusSearch" target="_blank" rel="noopener">' + esc(m.serial) + '</a>)' : ""); }).join(", ") + (d.sound_only_more ? ', and ' + d.sound_only_more + ' more' : "") + '.</p>' : "";
