@@ -124,7 +124,10 @@ footer a{color:#b5bbd6;display:block;padding:4px 0;transition:color .15s}footer 
 /* Nov 2 objections update */
 .nc-trust{margin:.35rem 0 0!important;font-size:.82rem}
 .nc-tips{display:flex;gap:.5rem;align-items:center;font-size:.88rem;margin:.25rem 0}.nc-tips[hidden]{display:none}.nc-tips input{width:auto;margin:0}
-#alert-next{padding-top:48px;padding-bottom:48px}.anext{max-width:640px;margin:1rem auto 0;padding-left:1.4rem;line-height:1.7}.anext li{margin:.5rem 0}
+#alert-next{padding-top:48px;padding-bottom:24px}.anext{max-width:640px;margin:1rem auto 0;padding-left:1.4rem;line-height:1.7}.anext li{margin:.5rem 0}
+#how{padding-top:40px}
+.pricing{padding-bottom:40px}
+#founder{padding-top:40px}
 .whynot{max-width:760px;margin:28px auto 0;padding:22px 26px}.whynot h3{margin:0 0 .4rem}.whynot p{margin:0}
 .fbox{display:flex;gap:28px;align-items:center}.fbox img{width:160px;height:160px;border-radius:50%;object-fit:cover;flex:none}.fbox h2{margin:0 0 .5rem}
 @media (max-width:640px){.fbox{flex-direction:column;text-align:center;gap:16px}.fbox img{width:128px;height:128px}.whynot{padding:18px}.anext{padding-left:1.2rem}}
