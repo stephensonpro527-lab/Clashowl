@@ -5,7 +5,15 @@
   var API = window.NC_API || "https://clashowl-namecheck.clashowl.workers.dev/api/check";
   var MONTHLY = "https://buy.stripe.com/3cIbJ2gqK0am6SP3ECbo400", YEARLY = "https://buy.stripe.com/3cIcN6b6qf5gb956QObo401", PORTFOLIO = "https://buy.stripe.com/28E3cwa2m4qC1yv0sqbo403";
   var q = new URLSearchParams(location.search), CAPTURE = q.get("capture") !== "0"; // add ?capture=0 when testing so no signups are created
-  function gc(n) { try { if (window.goatcounter && window.goatcounter.count) window.goatcounter.count({path: n, title: n, event: true}); } catch (e) {} }
+  function gc1(n) { try { if (window.goatcounter && window.goatcounter.count) window.goatcounter.count({path: n, title: n, event: true}); } catch (e) {} }
+  var ALIAS = {"nc-check-start": "free_check_started", "nc-check-done": "free_check_completed", "nc-email-capture": "email_captured"};
+  function gc(n) { gc1(n); if (ALIAS[n]) gc1(ALIAS[n]); }
+  // trial_started: any click on a Stripe checkout link on pages that load this script (plan in a second event).
+  document.addEventListener("click", function (ev) {
+    var a = ev.target.closest && ev.target.closest('a[href^="https://buy.stripe.com/"]'); if (!a) return;
+    var h = a.getAttribute("href"), plan = h === YEARLY ? "yearly" : h === PORTFOLIO ? "portfolio" : "monthly";
+    gc1("trial_started"); gc1("trial_started-" + plan);
+  }, true);
   function adsLead() {
     try {
       if (typeof gtag === "function") {
@@ -21,26 +29,25 @@
   function uspto(n) { return '<p><a class="btn" href="https://tmsearch.uspto.gov/search/search-results?query=' + encodeURIComponent(n) + '" target="_blank" rel="noopener" data-goatcounter-click="nc-uspto-full">Search USPTO yourself</a></p>'; }
   function fmt(d) { if (!d) return "date not listed"; return new Date(d + "T12:00:00").toLocaleDateString("en-US", {month: "short", day: "numeric", year: "numeric"}); }
   function cta(label, plans) {
-    return '<p style="margin:0 0 .5rem"><a class="btn" href="' + MONTHLY + '" data-goatcounter-click="nc-trial">' + label + '</a></p>' +
+        return '<p style="margin:0 0 .5rem"><a class="btn" href="' + MONTHLY + '" data-goatcounter-click="nc-trial">' + label + '</a></p>' +
       '<p class="muted" style="margin:0">$15/month after 7 free days, <a href="' + YEARLY + '" data-goatcounter-click="nc-yearly">$149/year</a>, or <a href="' + PORTFOLIO + '" data-goatcounter-click="nc-portfolio">$49/month for up to 50 brands</a>. Cancel anytime. <a href="' + plans + '">See plans</a></p>';
   }
+  function watch(name) { return '<p style="margin:.5rem 0"><a class="btn light" href="' + MONTHLY + '" data-goatcounter-click="nc-watch-preview">Watch ' + esc(name) + ' free for 7 days</a></p>'; }
   function init(f) {
     var r = f.parentNode.querySelector("[data-results]"), b = f.querySelector("button"), label = b.textContent, src = f.getAttribute("data-source") || "name-check", plans = f.getAttribute("data-plans") || "index.html#pricing";
-    var ef = f.elements.email, unlock = false, lastName = "", unlockLabel = "Show me the similar names";
-    function step1() { unlock = false; ef.hidden = true; ef.required = false; b.textContent = label; }
-    function step2() { unlock = true; ef.hidden = false; ef.required = true; b.textContent = unlockLabel; }
+    var ef = f.elements.email, tips = f.querySelector(".nc-tips"), unlock = false, lastName = "", unlockLabel = "Show me the similar names";
+    function step1() { unlock = false; ef.hidden = true; if (tips) tips.hidden = true; ef.required = false; b.textContent = label; }
+    function step2() { unlock = true; ef.hidden = false; if (tips) tips.hidden = false; ef.required = true; b.textContent = unlockLabel; }
     step1();
     f.elements.name.addEventListener("input", function () { if (unlock && f.elements.name.value.trim() !== lastName) { step1(); r.innerHTML = ""; } });
     function previewHTML(d, name) {
       var fb = d.coverage === "60day_fallback", n = d.count || 0, so = (d.counts && d.counts.sound_only) || 0;
       var pool = fb ? "in U.S. applications filed since " + fmt(d.since) : d.total ? "in " + Number(d.total).toLocaleString() + " live U.S. federal marks" : "in live U.S. federal marks";
       var banner = fb ? '<div class="nc-box nc-warn"><p><b>Limited check right now.</b> Our full-register search is temporarily unavailable, so this result only covers U.S. applications filed since ' + fmt(d.since) + ' (about the last 60 days). Older applications and registered marks were not searched.</p></div>' : "";
-      var head = n ? n + ' similar filing' + (n == 1 ? "" : "s") + ' found for ' + esc(name) + (so ? ', plus ' + so + ' that sound' + (so == 1 ? "s" : "") + ' similar' : "")
-        : so ? 'No close look-alikes for ' + esc(name) + ', but ' + so + ' mark' + (so == 1 ? " sounds" : "s sound") + ' similar'
-        : 'No close matches for ' + esc(name);
-      var ask = (n || so) ? 'Enter your email to see each mark, its serial number, filing date, class, status and USPTO record link.'
-        : 'Enter your email to see the full result and get the option to watch new filings for this name.';
-      return banner + '<div class="nc-box"><h3>' + head + ' ' + pool + '</h3><p>' + ask + '</p><p class="muted">We\'ll also send you our weekly trademark tips. Unsubscribe anytime. <a href="privacy.html">Privacy</a></p><p class="muted">Automated screen only: not a clearance search and not legal advice. It does not cover state or common-law (unregistered) rights.</p></div>';
+      var tot = n + so;
+      var head = tot ? 'We found ' + tot + ' live filing' + (tot == 1 ? "" : "s") + ' that look' + (tot == 1 ? "s" : "") + ' or sound' + (tot == 1 ? "s" : "") + ' like ' + esc(name) + '.'
+        : 'No close matches right now. New filings come in every day.';
+      return banner + '<div class="nc-box"><h3>' + head + '</h3><p class="muted">Searched ' + pool.replace(/^in /, "") + '.</p><p>Enter your email to see the details and get an alert if anything new is filed.</p>' + watch(name) + '<p class="muted">Automated screen only: not a clearance search and not legal advice. It does not cover state or common-law (unregistered) rights. <a href="privacy.html">Privacy</a></p></div>';
     }
     f.addEventListener("submit", async function (ev) {
       ev.preventDefault();
@@ -59,7 +66,8 @@
       r.innerHTML = "";
       gc("nc-email-capture");
       if (CAPTURE && !botcheck) {
-        var fd = new FormData(); fd.append("access_key", "023b980d-f013-456e-8eaf-0711bed7df93"); fd.append("subject", "New ClashOwl waitlist signup");
+        var wantTips = !!(f.elements.tips && f.elements.tips.checked);
+        var fd = new FormData(); fd.append("access_key", "023b980d-f013-456e-8eaf-0711bed7df93"); fd.append("subject", wantTips ? "New ClashOwl waitlist signup" : "New ClashOwl name check lead (no tips)"); fd.append("weekly_tips", wantTips ? "yes" : "no");
         fd.append("from_name", "ClashOwl name check"); fd.append("email", email); fd.append("source", src); fd.append("brand", name);
         fetch("https://api.web3forms.com/submit", {method: "POST", body: fd}).catch(function () {});
       }
@@ -74,7 +82,7 @@
         var pool = fb ? "in U.S. applications filed since " + fmt(d.since) : d.total ? "in " + Number(d.total).toLocaleString() + " live U.S. federal marks" : "in live U.S. federal marks";
         if (!d.count) {
           r.innerHTML = banner + '<div class="nc-box"><h3>No close matches ' + pool + '</h3><p>' + (fb ? 'We found no recent applications that look or sound like <b>' + esc(name) + '</b>. This was a limited 60-day check, not the full register.' : 'We found no live (pending or registered) U.S. trademarks that look or sound like <b>' + esc(name) + '</b>.') + '</p>' + sounds + '<p>That is a good sign, not a guarantee. State and common-law (unregistered) rights are not covered, and a name can still conflict in ways an automated screen misses.</p>' + uspto(name) +
-            '<p>ClashOwl can watch new filings for your name going forward and email you if something similar is filed.</p>' + cta("Start your 7-day free trial to watch new filings daily", plans) + '<p class="muted">Automated screen only: not a clearance search and not legal advice. It does not cover state or common-law (unregistered) rights. Talk to a trademark attorney before you rely on a name.</p></div>';
+            '<p>ClashOwl can watch new filings for your name going forward and email you if something similar is filed.</p>' + cta("Watch " + esc(name) + " free for 7 days", plans) + '<p class="muted">Automated screen only: not a clearance search and not legal advice. It does not cover state or common-law (unregistered) rights. Talk to a trademark attorney before you rely on a name.</p></div>';
           return;
         }
         var rows = d.matches.map(function (m) {
@@ -82,7 +90,7 @@
         }).join("");
         var more = d.count > d.matches.length ? '<p class="muted">Showing the closest ' + d.matches.length + ' of ' + d.count + '.</p>' : "";
         r.innerHTML = banner + '<h3>We found ' + d.count + ' possible match' + (d.count == 1 ? "" : "es") + ' for ' + esc(name) + ' ' + pool + '</h3><p class="muted">' + (fb ? 'Recent applications only (60-day limited check).' : 'Live U.S. federal trademarks (pending or registered) that look or sound like your name. Dead and abandoned marks are left out.') + '</p>' + rows + more + sounds +
-          '<div class="nc-box"><p>New filings keep coming. ClashOwl can watch them for your name and email you if something similar is filed.</p>' + uspto(name) + cta("Start your 7-day free trial to watch new filings daily", plans) + '<p class="muted">A possible match isn\'t always a problem. Automated screen only: not a clearance search and not legal advice. It does not cover state or common-law (unregistered) rights. Talk to a trademark attorney before you rely on a name.</p></div>';
+          '<div class="nc-box"><p>New filings keep coming. ClashOwl can watch them for your name and email you if something similar is filed.</p>' + uspto(name) + cta("Watch " + esc(name) + " free for 7 days", plans) + '<p class="muted">A possible match isn\'t always a problem. Automated screen only: not a clearance search and not legal advice. It does not cover state or common-law (unregistered) rights. Talk to a trademark attorney before you rely on a name.</p></div>';
       } catch (e) { r.innerHTML = '<p class="nc-err">Something went wrong. Please try again.</p>'; }
       finally { b.disabled = false; b.textContent = unlockLabel; }
     });
