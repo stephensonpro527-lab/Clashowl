@@ -12,6 +12,7 @@ const YEARLY = "https://buy.stripe.com/3cIcN6b6qf5gb956QObo401";
 const PORTFOLIO = "https://buy.stripe.com/28E3cwa2m4qC1yv0sqbo403";
 const BRAND = "ZZQXBRAND99";
 const EMAIL = "not-a-real-lead@example.test";
+function checkout(base) { return base + "?prefilled_email=" + encodeURIComponent(EMAIL); }
 const SERIAL = "SN9XQ17";
 const PROOF = "Searches over 4 million live U.S. federal trademarks, refreshed every day from the USPTO. No signup to see how many come up.";
 
@@ -160,7 +161,7 @@ function assertStillNavigates(h, href) {
 
 async function preview(h) {
   const form = h.window.document.querySelector("form");
-  form.elements.name.value = BRAND;
+  form.elements.name.value = h.brand || BRAND;
   form.requestSubmit();
   await waitFor(function () { return h.window.document.querySelector("[data-results] .nc-box"); });
   return form;
@@ -173,6 +174,24 @@ async function unlock(h) {
   await waitFor(function () { return h.window.document.querySelector("a[data-goatcounter-click='nc-trial']"); });
   return h.window.document.querySelector("a[data-goatcounter-click='nc-trial']");
 }
+
+test("a brand with spaces stays on the button and out of the Stripe URL", async function () {
+  const h = harness({ outcome: "clean" });
+  h.brand = "North Loom 2";
+  try {
+    const a = await unlock(h);
+    assert.equal(a.textContent, "Watch North Loom 2 for 7 days free");
+    const params = new URL(a.getAttribute("href")).searchParams;
+    assert.deepEqual(Array.from(params.keys()), ["prefilled_email"]);
+    assert.equal(a.getAttribute("href").includes("North"), false);
+    assert.equal(a.getAttribute("href").includes("client_reference_id"), false);
+    click(h.window, a);
+    assert.equal(JSON.stringify(h.events).includes("North"), false);
+    assert.equal(JSON.stringify(h.events).includes(EMAIL), false);
+    assert.equal(countPath(h.events, "nc-trial"), 1);
+    assert.equal(countPath(h.events, "trial_started"), 1);
+  } finally { h.window.close(); }
+});
 
 test("proof line on the free name check page stays in place", function () {
   const html = fs.readFileSync(new URL("./free-name-check.html", import.meta.url), "utf8");
@@ -199,11 +218,18 @@ test("clean result: one primary click records nc-trial once and still navigates"
   const h = harness({ outcome: "clean" });
   try {
     const a = await unlock(h);
-    assert.equal(a.getAttribute("href"), MONTHLY);
-    assert.equal(a.textContent, "Watch " + BRAND + " free for 7 days");
+    assert.equal(a.getAttribute("href"), checkout(MONTHLY));
+    assert.deepEqual(Array.from(new URL(a.getAttribute("href")).searchParams.keys()), ["prefilled_email"]);
+    assert.equal(new URL(a.getAttribute("href")).searchParams.get("prefilled_email"), EMAIL);
+    assert.equal(a.getAttribute("href").includes(BRAND), false);
+    assert.equal(a.getAttribute("href").includes("client_reference_id"), false);
+    assert.equal(a.textContent, "Watch " + BRAND + " for 7 days free");
     assert.equal(a.dataset.goatcounterBound, "true");
     const results = h.window.document.querySelector("[data-results]");
     assert.match(results.textContent, /No close matches/);
+    assert.match(results.textContent, /one-time search of the records we just looked at/);
+    assert.match(results.textContent, /does not cover applications filed after today/);
+    assert.equal(/4\.5|per week|weekly filing/i.test(results.textContent), false);
     assert.match(results.textContent, /\$15\/month after 7 free days/);
     assert.match(results.textContent, /\$149\/year/);
     assert.match(results.textContent, /\$49\/month for up to 50 brands/);
@@ -214,8 +240,9 @@ test("clean result: one primary click records nc-trial once and still navigates"
     assert.deepEqual(added, ["trial_started", "trial_started-monthly", "nc-trial"]);
     assert.equal(h.events.filter(function (e) { return e.path === "nc-trial"; })[0].title, "nc-trial");
     assert.equal(h.events.filter(function (e) { return e.path === "nc-trial"; })[0].event, true);
-    assertStillNavigates(h, MONTHLY);
+    assertStillNavigates(h, checkout(MONTHLY));
     assertNoPrivateData(h.events);
+    assert.equal(JSON.stringify(h.events).includes(EMAIL), false);
     assert.equal(h.fetches.some(function (u) { return /web3forms|stripe|goatcounter|google/i.test(u); }), false);
   } finally { h.window.close(); }
 });
@@ -231,8 +258,13 @@ test("clean result: yearly, portfolio, plans, and USPTO clicks do not double-cou
       click(h.window, el);
       return paths(h.events.slice(before));
     }
-    assert.deepEqual(added(doc.querySelector("[data-goatcounter-click='nc-yearly']")), ["trial_started", "trial_started-yearly", "nc-yearly"]);
-    assert.deepEqual(added(doc.querySelector("[data-goatcounter-click='nc-portfolio']")), ["trial_started", "trial_started-portfolio", "nc-portfolio"]);
+    const yearly = doc.querySelector("[data-goatcounter-click='nc-yearly']");
+    const portfolio = doc.querySelector("[data-goatcounter-click='nc-portfolio']");
+    assert.equal(yearly.getAttribute("href"), checkout(YEARLY));
+    assert.equal(portfolio.getAttribute("href"), checkout(PORTFOLIO));
+    assert.equal(yearly.getAttribute("href").includes(BRAND), false);
+    assert.deepEqual(added(yearly), ["trial_started", "trial_started-yearly", "nc-yearly"]);
+    assert.deepEqual(added(portfolio), ["trial_started", "trial_started-portfolio", "nc-portfolio"]);
     assert.deepEqual(added(doc.querySelector("[data-results] a[href='index.html#pricing']")), []);
     const uspto = doc.querySelector("[data-goatcounter-click='nc-uspto-full']");
     assert.equal(uspto.dataset.goatcounterBound, "true");
@@ -251,6 +283,9 @@ test("similar-match result records one nc-trial from the button or a child", asy
     assert.match(results.textContent, /OTHERMARK/);
     assert.match(results.textContent, new RegExp(SERIAL));
     assert.match(results.textContent, /We found 1 live filing/);
+    assert.match(results.textContent, /New filings keep coming/);
+    assert.equal(a.getAttribute("href"), checkout(MONTHLY));
+    assert.equal(a.textContent, "Watch " + BRAND + " for 7 days free");
     const span = h.window.document.createElement("span");
     span.textContent = "inner";
     a.appendChild(span);
@@ -263,7 +298,7 @@ test("similar-match result records one nc-trial from the button or a child", asy
     assert.equal(countPath(h.events, "nc-trial"), 2);
     assert.equal(countPath(h.events, "trial_started"), 2);
     assertNoPrivateData(h.events);
-    assertStillNavigates(h, MONTHLY);
+    assertStillNavigates(h, checkout(MONTHLY));
   } finally { h.window.close(); }
 });
 
@@ -271,7 +306,10 @@ test("sound-alike no-lookalike result uses the same trial click metric", async f
   const h = harness({ outcome: "sound" });
   try {
     const a = await unlock(h);
-    assert.match(h.window.document.querySelector("[data-results]").textContent, /sounds similar/);
+    const results = h.window.document.querySelector("[data-results]");
+    assert.match(results.textContent, /sounds similar/);
+    assert.match(results.textContent, /does not cover applications filed after today/);
+    assert.equal(a.getAttribute("href"), checkout(MONTHLY));
     h.window.goatcounter.bind_events();
     click(h.window, a);
     assert.equal(countPath(h.events, "nc-trial"), 1);
@@ -302,7 +340,8 @@ test("rerender and a repeated check bind the new link once", async function () {
     click(h.window, second);
     assert.equal(countPath(h.events, "nc-trial"), 2);
     assert.equal(countPath(h.events, "trial_started"), 2);
-    assert.equal(second.textContent, "Watch " + BRAND + " free for 7 days");
+    assert.equal(second.textContent, "Watch " + BRAND + " for 7 days free");
+    assert.equal(second.getAttribute("href"), checkout(MONTHLY));
     assertNoPrivateData(h.events);
   } finally { h.window.close(); }
 });
@@ -313,6 +352,8 @@ test("preview watch click stays on trial_started and does not emit nc-watch-prev
     await preview(h);
     const w = h.window.document.querySelector("[data-goatcounter-click='nc-watch-preview']");
     assert.equal(w.dataset.goatcounterBound, "true");
+    assert.equal(w.getAttribute("href"), MONTHLY);
+    assert.equal(w.getAttribute("href").includes("prefilled_email"), false);
     assert.equal(w.textContent, "Watch " + BRAND + " free for 7 days");
     h.window.goatcounter.bind_events();
     const before = h.events.length;
@@ -343,7 +384,7 @@ test("a click before GoatCounter loads is sent once when it arrives", async func
     assert.equal(countPath(h.events, "nc-trial"), 2);
     assert.equal(countPath(h.events, "trial_started"), 2);
     assert.equal(countPath(h.events, "trial_started-monthly"), 2);
-    assertStillNavigates(h, MONTHLY);
+    assertStillNavigates(h, checkout(MONTHLY));
   } finally { h.window.close(); }
 });
 
@@ -363,7 +404,8 @@ test("queued clicks are dropped if GoatCounter never arrives, and the link still
     click(h.window, a);
     assert.deepEqual(sink, ["trial_started", "trial_started-monthly", "nc-trial"]);
     assert.equal(JSON.stringify(sink).includes(BRAND), false);
-    assertStillNavigates(h, MONTHLY);
+    assert.equal(JSON.stringify(sink).includes(EMAIL), false);
+    assertStillNavigates(h, checkout(MONTHLY));
     assert.equal(h.fetches.some(function (u) { return /web3forms|stripe|goatcounter/i.test(u); }), false);
   } finally { h.window.close(); }
 });
@@ -373,9 +415,9 @@ test("a throwing analytics call does not block navigation", async function () {
   try {
     const a = await unlock(h);
     assert.doesNotThrow(function () { click(h.window, a); });
-    assert.equal(a.getAttribute("href"), MONTHLY);
-    assertStillNavigates(h, MONTHLY);
-    assert.equal(a.textContent, "Watch " + BRAND + " free for 7 days");
+    assert.equal(a.getAttribute("href"), checkout(MONTHLY));
+    assertStillNavigates(h, checkout(MONTHLY));
+    assert.equal(a.textContent, "Watch " + BRAND + " for 7 days free");
   } finally { h.window.close(); }
 });
 
@@ -386,6 +428,6 @@ test("middle-click counts nc-trial once and does not also emit trial_started", a
     const before = h.events.length;
     click(h.window, a, "auxclick");
     assert.deepEqual(paths(h.events.slice(before)), ["nc-trial"]);
-    assertStillNavigates(h, MONTHLY);
+    assertStillNavigates(h, checkout(MONTHLY));
   } finally { h.window.close(); }
 });
