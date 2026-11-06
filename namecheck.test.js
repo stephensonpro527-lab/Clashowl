@@ -180,7 +180,7 @@ test("a brand with spaces stays on the button and out of the Stripe URL", async 
   h.brand = "North Loom 2";
   try {
     const a = await unlock(h);
-    assert.equal(a.textContent, "Watch North Loom 2 for 7 days free");
+    assert.equal(a.textContent, "Watch North Loom 2 free for 7 days");
     const params = new URL(a.getAttribute("href")).searchParams;
     assert.deepEqual(Array.from(params.keys()), ["prefilled_email"]);
     assert.equal(a.getAttribute("href").includes("North"), false);
@@ -223,7 +223,7 @@ test("clean result: one primary click records nc-trial once and still navigates"
     assert.equal(new URL(a.getAttribute("href")).searchParams.get("prefilled_email"), EMAIL);
     assert.equal(a.getAttribute("href").includes(BRAND), false);
     assert.equal(a.getAttribute("href").includes("client_reference_id"), false);
-    assert.equal(a.textContent, "Watch " + BRAND + " for 7 days free");
+    assert.equal(a.textContent, "Watch " + BRAND + " free for 7 days");
     assert.equal(a.dataset.goatcounterBound, "true");
     const results = h.window.document.querySelector("[data-results]");
     assert.match(results.textContent, /No close matches/);
@@ -285,7 +285,7 @@ test("similar-match result records one nc-trial from the button or a child", asy
     assert.match(results.textContent, /We found 1 live filing/);
     assert.match(results.textContent, /New filings keep coming/);
     assert.equal(a.getAttribute("href"), checkout(MONTHLY));
-    assert.equal(a.textContent, "Watch " + BRAND + " for 7 days free");
+    assert.equal(a.textContent, "Watch " + BRAND + " free for 7 days");
     const span = h.window.document.createElement("span");
     span.textContent = "inner";
     a.appendChild(span);
@@ -340,7 +340,7 @@ test("rerender and a repeated check bind the new link once", async function () {
     click(h.window, second);
     assert.equal(countPath(h.events, "nc-trial"), 2);
     assert.equal(countPath(h.events, "trial_started"), 2);
-    assert.equal(second.textContent, "Watch " + BRAND + " for 7 days free");
+    assert.equal(second.textContent, "Watch " + BRAND + " free for 7 days");
     assert.equal(second.getAttribute("href"), checkout(MONTHLY));
     assertNoPrivateData(h.events);
   } finally { h.window.close(); }
@@ -417,7 +417,7 @@ test("a throwing analytics call does not block navigation", async function () {
     assert.doesNotThrow(function () { click(h.window, a); });
     assert.equal(a.getAttribute("href"), checkout(MONTHLY));
     assertStillNavigates(h, checkout(MONTHLY));
-    assert.equal(a.textContent, "Watch " + BRAND + " for 7 days free");
+    assert.equal(a.textContent, "Watch " + BRAND + " free for 7 days");
   } finally { h.window.close(); }
 });
 

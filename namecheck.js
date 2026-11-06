@@ -4,10 +4,12 @@
 (function () {
   var API = window.NC_API || "https://clashowl-namecheck.clashowl.workers.dev/api/check";
   var MONTHLY = "https://buy.stripe.com/3cIbJ2gqK0am6SP3ECbo400", YEARLY = "https://buy.stripe.com/3cIcN6b6qf5gb956QObo401", PORTFOLIO = "https://buy.stripe.com/28E3cwa2m4qC1yv0sqbo403";
-  // Payment Links can prefill the email (?prefilled_email=). They cannot prefill
-  // a custom text field from the URL. client_reference_id is not shown at
-  // checkout, drops spaces, and nothing in this repo reads the webhook, so the
-  // brand stays in the button label and is not stuffed into a fake query param.
+  // Payment Links can prefill the email (?prefilled_email=). The live links also
+  // require a text field key "brands" whose default_value is empty. Stripe's
+  // documented URL parameters do not prefill that field, and client_reference_id
+  // is hidden and drops spaces. A per-customer default needs a Checkout Session
+  // from a secret key, which this static site does not have. Do not invent a
+  // custom-field query param, and do not put the brand or email in analytics.
   function stripeHref(base, email) {
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return base;
     return base + "?prefilled_email=" + encodeURIComponent(email);
@@ -160,7 +162,7 @@
         var so2 = (d.counts && d.counts.sound_only) || ((d.sound_alikes || []).length + (d.sound_only_more || 0)), tot2 = (d.count || 0) + so2;
         if (!d.count) {
           render(banner + '<div class="nc-box"><h3>' + (so2 ? 'No close look-alikes ' + pool + ', but ' + so2 + ' mark' + (so2 == 1 ? " sounds" : "s sound") + ' similar' : 'No close matches ' + pool) + '</h3><p>' + (fb ? 'We found no recent applications that look or sound like <b>' + esc(name) + '</b>. This was a limited 60-day check, not the full register.' : 'We found no live (pending or registered) U.S. trademarks that look or sound like <b>' + esc(name) + '</b>.') + '</p>' + sounds + '<p>That is a good sign, not a guarantee. State and common-law (unregistered) rights are not covered, and a name can still conflict in ways an automated screen misses.</p>' + uspto(name) +
-            '<p>This check is a one-time search of the records we just looked at. It does not cover applications filed after today. ClashOwl can watch new filings and email you if one looks or sounds like <b>' + esc(name) + '</b>.</p>' + cta("Watch " + esc(name) + " for 7 days free", plans, email) + '<p class="muted">Automated screen only: not a clearance search and not legal advice. It does not cover state or common-law (unregistered) rights. Talk to a trademark attorney before you rely on a name.</p></div>');
+            '<p>This check is a one-time search of the records we just looked at. It does not cover applications filed after today. ClashOwl can watch new filings and email you if one looks or sounds like <b>' + esc(name) + '</b>.</p>' + cta("Watch " + esc(name) + " free for 7 days", plans, email) + '<p class="muted">Automated screen only: not a clearance search and not legal advice. It does not cover state or common-law (unregistered) rights. Talk to a trademark attorney before you rely on a name.</p></div>');
           return;
         }
         var rows = d.matches.map(function (m) {
@@ -168,7 +170,7 @@
         }).join("");
         var more = d.count > d.matches.length ? '<p class="muted">Showing the closest ' + d.matches.length + ' of ' + d.count + '.</p>' : "";
         render(banner + '<h3>We found ' + tot2 + ' live filing' + (tot2 == 1 ? "" : "s") + ' that look' + (tot2 == 1 ? "s" : "") + ' or sound' + (tot2 == 1 ? "s" : "") + ' like ' + esc(name) + ' ' + pool + (so2 ? ': ' + d.count + ' close match' + (d.count == 1 ? "" : "es") + ' below, plus ' + so2 + ' that only sound' + (so2 == 1 ? "s" : "") + ' similar' : "") + '</h3><p class="muted">' + (fb ? 'Recent applications only (60-day limited check).' : 'Live U.S. federal trademarks (pending or registered) that look or sound like your name. Dead and abandoned marks are left out.') + '</p>' + rows + more + sounds +
-          '<div class="nc-box"><p>New filings keep coming. ClashOwl can watch them for your name and email you if something similar is filed.</p>' + uspto(name) + cta("Watch " + esc(name) + " for 7 days free", plans, email) + '<p class="muted">A possible match isn\'t always a problem. Automated screen only: not a clearance search and not legal advice. It does not cover state or common-law (unregistered) rights. Talk to a trademark attorney before you rely on a name.</p></div>');
+          '<div class="nc-box"><p>New filings keep coming. ClashOwl can watch them for your name and email you if something similar is filed.</p>' + uspto(name) + cta("Watch " + esc(name) + " free for 7 days", plans, email) + '<p class="muted">A possible match isn\'t always a problem. Automated screen only: not a clearance search and not legal advice. It does not cover state or common-law (unregistered) rights. Talk to a trademark attorney before you rely on a name.</p></div>');
       } catch (e) { render('<p class="nc-err">Something went wrong. Please try again.</p>'); }
       finally { b.disabled = false; b.textContent = unlockLabel; }
     });
